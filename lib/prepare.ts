@@ -1,66 +1,56 @@
+import type { SFTPConfig } from '#types'
 import type { PrepareContext } from '@data-fair/types-catalogs'
-import type { MockCapabilities } from './capabilities.ts'
-import type { MockConfig } from '#types'
+import type { SFTPCapabilities } from './capabilities.ts'
+import { type Config, NodeSSH } from 'node-ssh'
 
-export default async ({ catalogConfig, capabilities, secrets }: PrepareContext<MockConfig, MockCapabilities>) => {
-  // Manage secrets
-  const secretField = catalogConfig.secretField
-  // If the config contains a secretField, and it is not already hidden
-  if (secretField && secretField !== '********') {
-    // Hide the secret in the catalogConfig, and copy it to secrets
-    secrets.secretField = secretField
-    catalogConfig.secretField = '********'
-
-  // If the secretField is in the secrets, and empty in catalogConfig,
-  // then it means the user has cleared the secret in the config
-  } else if (secrets?.secretField && secretField === '') {
-    delete secrets.secretField
-  } else {
-    // The secret is already set, do nothing
+export default async ({ catalogConfig, secrets }: PrepareContext<SFTPConfig, SFTPCapabilities>) => {
+  switch (catalogConfig.connectionKey.key) {
+    case 'sshKey':
+      delete secrets.password
+      if (catalogConfig.connectionKey.sshKey === '') {
+        delete secrets.sshKey
+      } else if (catalogConfig.connectionKey.sshKey && catalogConfig.connectionKey.sshKey !== '********') {
+        secrets.sshKey = catalogConfig.connectionKey.sshKey
+        catalogConfig.connectionKey.sshKey = '********'
+      }
+      break
+    case 'password':
+      delete secrets.sshKey
+      if (catalogConfig.connectionKey.password === '') {
+        delete secrets.password
+      } else if (catalogConfig.connectionKey.password && catalogConfig.connectionKey.password !== '********') {
+        secrets.password = catalogConfig.connectionKey.password
+        catalogConfig.connectionKey.password = '********'
+      }
+      break
+    default: break
   }
 
-  // Manage capabilities
-  if (catalogConfig.searchCapability && !capabilities.includes('search')) capabilities.push('search')
-  else capabilities = capabilities.filter(c => c !== 'search')
+  // try the SFTP connection
+  try {
+    const paramsConnection: Config = {
+      host: catalogConfig.url,
+      username: catalogConfig.login,
+      port: catalogConfig.port
+    }
+    if (catalogConfig.connectionKey.key === 'sshKey') {
+      paramsConnection.privateKey = secrets.sshKey
+    } else if (catalogConfig.connectionKey.key === 'password') {
+      paramsConnection.password = secrets.password
+    } else {
+      throw new Error('format non pris en charge')
+    }
 
-  if (catalogConfig.paginationCapability && !capabilities.includes('pagination')) capabilities.push('pagination')
-  else capabilities = capabilities.filter(c => c !== 'pagination')
-
-  // Manage publication capabilities based on publicationMode
-  const publicationCapabilities: typeof capabilities[number][] = [
-    'createFolderInRoot',
-    'createFolder',
-    'createResource',
-    'replaceFolder',
-    'replaceResource'
-  ]
-
-  // Remove all publication capabilities first (including requiresPublicationSite)
-  capabilities = capabilities.filter(c => !publicationCapabilities.includes(c) && c !== 'requiresPublicationSite' && c !== 'publication' as any)
-
-  // Add capabilities based on publicationMode
-  if (catalogConfig.publicationMode === 'simple') {
-    capabilities.push('createFolderInRoot')
-  } else if (catalogConfig.publicationMode === 'full') {
-    capabilities.push(...publicationCapabilities)
-  } else if (catalogConfig.publicationMode === 'withSite') {
-    capabilities.push(...publicationCapabilities)
-    capabilities.push('requiresPublicationSite')
-  }
-
-  let thumbnailUrl: string
-  if (catalogConfig.thumbnailUrl) {
-    if (!capabilities.includes('thumbnailUrl')) capabilities.push('thumbnailUrl')
-    thumbnailUrl = catalogConfig.thumbnailUrl
-  } else {
-    capabilities = capabilities.filter(c => c !== 'thumbnailUrl')
-    thumbnailUrl = ''
+    const ssh = new NodeSSH()
+    await ssh.connect(paramsConnection)
+    ssh.dispose()
+  } catch (error) {
+    console.error('Connection test failed:', error)
+    throw new Error('Connection test failed', { cause: error })
   }
 
   return {
     catalogConfig,
-    capabilities,
-    secrets,
-    thumbnailUrl
+    secrets
   }
 }

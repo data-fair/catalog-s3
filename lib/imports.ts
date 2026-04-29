@@ -1,84 +1,106 @@
-import type { CatalogPlugin, GetResourceContext } from '@data-fair/types-catalogs'
-import type { MockConfig } from '#types'
+import type { SFTPConfig } from '#types'
+import type { FileEntryWithStats } from 'ssh2'
+import type capabilities from './capabilities.ts'
+import type { ListContext, Folder, CatalogPlugin } from '@data-fair/types-catalogs'
+import { type Config, NodeSSH } from 'node-ssh'
 
-export const getResource = async ({ catalogConfig, secrets, resourceId, importConfig, tmpDir, log }: GetResourceContext<MockConfig>): ReturnType<CatalogPlugin['getResource']> => {
-  await log.info(`Downloading resource ${resourceId}`, { catalogConfig, secrets, importConfig })
+type ResourceList = Awaited<ReturnType<CatalogPlugin['list']>>['results']
 
-  // Simulate a delay for the mock plugin
-  await log.task('delay', 'Simulate delay for mock plugin (Response Delay * 10) ', catalogConfig.delay * 10)
-  for (let i = 0; i < catalogConfig.delay * 10; i += catalogConfig.delay) {
-    await new Promise(resolve => setTimeout(resolve, catalogConfig.delay))
-    await log.progress('delay', i + catalogConfig.delay)
+/**
+ * Prepares a list of files and folders from the SFTP directory listing.
+ *
+ * @param list - The array of file objects returned by the SFTP `readdir` method.
+ * @param path - The current directory path.
+ * @returns An array of `Folder` or `ResourceList` objects representing the files and folders.
+ */
+const prepareFiles = (list: FileEntryWithStats[], path: string): (Folder[] | ResourceList) => {
+  return list.map((file: FileEntryWithStats) => {
+    const pointPos = file.filename.lastIndexOf('.')
+    if (file.longname.charAt(0) === 'd') {
+      // Folder
+      return {
+        id: path + '/' + file.filename,
+        title: file.filename,
+        type: 'folder',
+        updatedAt: file.attrs.mtime ? new Date(file.attrs.mtime * 1000) : undefined
+      } as Folder
+    } else {
+      // ResourceList
+      return {
+        id: path + '/' + file.filename,
+        title: file.filename,
+        type: 'resource',
+        description: '',
+        format: (pointPos === -1) ? '' : (file.filename.substring(pointPos + 1)),
+        mimeType: '',
+        size: file.attrs.size,
+        updatedAt: file.attrs.mtime ? new Date(file.attrs.mtime * 1000) : undefined
+      } as ResourceList[number]
+    }
+  })
+}
+
+/**
+ * Lists the contents of a folder on an SFTP server.
+ *
+ * @param context - The context containing catalog configuration and parameters.
+ * @returns An object containing the count of items, the list of results (folders and resources), and the path as an array of folders.
+ * @throws Will throw an error if the connection configuration is invalid or not supported.
+ */
+export const list = async ({ catalogConfig, secrets, params }: ListContext<SFTPConfig, typeof capabilities>): ReturnType<CatalogPlugin['list']> => {
+  const paramsConnection: Config = {
+    host: catalogConfig.url,
+    username: catalogConfig.login,
+    port: catalogConfig.port
+  }
+  if (catalogConfig.connectionKey.key === 'sshKey') {
+    paramsConnection.privateKey = secrets.sshKey
+  } else if (catalogConfig.connectionKey.key === 'password') {
+    paramsConnection.password = secrets.password
+  } else {
+    throw new Error('format non pris en charge')
   }
 
-  // Validate the importConfig
-  await log.step('Validate import configuraiton')
-  const { returnValid } = await import('#type/importConfig/index.ts')
-  returnValid(importConfig)
-  await log.info('Import configuration is valid', { importConfig })
+  const ssh = new NodeSSH()
 
-  // First check if the resource exists
-  const resources = (await import('./resources/resources-mock.ts')).default
-  const resource = resources.resources[resourceId]
-  if (!resource) { throw new Error(`Resource with ID ${resourceId} not found`) }
+  try {
+    await ssh.connect(paramsConnection)
+  } catch (err) {
+    console.error(err)
+    throw new Error('Configuration invalide')
+  }
+  const clientSFTP = await ssh.requestSFTP()
 
-  // Import necessary modules dynamically
-  const fs = await import('node:fs/promises')
-  const path = await import('node:path')
-
-  await log.step('Download resource file')
-  await log.warning('This task can take a while, please be patient')
-  // Simulate downloading by copying a dummy file with limited rows
-  const sourceFile = path.join(import.meta.dirname, 'resources', 'dataset-mock.csv')
-  const destFile = path.join(tmpDir, 'dataset-mock.csv')
-  const data = await fs.readFile(sourceFile, 'utf8')
-
-  // Limit the number of rows to importConfig.nbRows (Header excluded)
-  const lines = data.split('\n').slice(0, importConfig.nbRows + 1).join('\n')
-  await fs.writeFile(destFile, lines, 'utf8')
-  await log.info(`${importConfig.nbRows} rows downloaded`)
-
-  await log.step('End of resource download')
-  await log.info(`Resource ${resourceId} downloaded successfully`)
-  await log.info(`Resource slug is ${resource.slug}`)
-  await log.warning('This is a mock resource, the file is not real and does not contain real data.')
-  await log.error('Example of an error log for demonstration purposes.')
-
-  const attachments = []
-  if (importConfig.importAttachments) {
-    // Copy thumbnail to the tmpDir if it exists
-    const thumbnailSource = path.join(import.meta.dirname, 'resources', 'thumbnail.svg')
-    const thumbnailDest = path.join(tmpDir, 'thumbnail.svg')
-    await fs.copyFile(thumbnailSource, thumbnailDest)
-    await log.info(`Thumbnail downloaded to ${thumbnailDest}`)
-    attachments.push(
-      {
-        title: 'Mock Attachment',
-        description: 'This is a mock attachment',
-        url: 'https://example.com/mock-attachment'
-      })
-    attachments.push({
-      title: 'Another Mock Attachment',
-      description: 'This is another mock attachment',
-      filePath: thumbnailDest
+  const path = params.currentFolderId ?? '.'
+  const files: FileEntryWithStats[] = await new Promise((resolve, reject) => {
+    if (!clientSFTP) {
+      throw new Error('Configuration invalide (clientSFTP manquant)')
+    }
+    clientSFTP.readdir(path, (err: any, list: any) => {
+      if (err) {
+        console.error('Error reading directory:', err)
+        return reject(err)
+      }
+      resolve(list)
     })
-  } else {
-    await log.warning('Attachments import is disabled, no attachments will be imported.')
+  })
+
+  const results = prepareFiles(files, path)
+
+  const pathFolder: Folder[] = []
+  let parentId: string | undefined = (params.currentFolderId?.indexOf('./')) === -1 ? params.currentFolderId : params.currentFolderId?.substring(params.currentFolderId.indexOf('./') + 2)
+  while (parentId && parentId !== '') {
+    pathFolder.unshift({
+      id: parentId,
+      title: parentId.substring(parentId.lastIndexOf('/') + 1),
+      type: 'folder'
+    })
+    parentId = parentId.substring(0, parentId.lastIndexOf('/'))
   }
 
   return {
-    id: resourceId,
-    ...resource,
-    description: resource.description + '\n\n' + secrets.secretField, // Include the secret in the description for demonstration
-    filePath: destFile,
-    frequency: 'monthly',
-    image: 'https://koumoul.com/data-fair-portals/api/v1/portals/8cbc8974-2fd2-46aa-b328-804600dc840f/assets/logo',
-    license: {
-      href: 'https://www.etalab.gouv.fr/wp-content/uploads/2014/05/Licence_Ouverte.pdf',
-      title: 'Licence Ouverte / Open Licence'
-    },
-    keywords: ['mock', 'example', 'data'],
-    origin: 'https://example.com/mock',
-    attachments
+    count: results.length,
+    results,
+    path: pathFolder
   }
 }
