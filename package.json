@@ -29,6 +29,7 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1038.0",
     "@data-fair/lib-node": "^2.8.1",
     "@data-fair/lib-utils": "^1.6.0",
     "debug": "^4.4.1",

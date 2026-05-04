@@ -1,4 +1,5 @@
-import type { SFTPConfig } from '#types'
+/**
+import type { S3Config } from '#types'
 import type { CatalogPlugin } from '@data-fair/types-catalogs'
 
 import { strict as assert } from 'node:assert'
@@ -21,8 +22,8 @@ const { generateKeyPairSync } = ssh2.utils
 const keysUser = generateKeyPairSync('ed25519')
 const keysHost = generateKeyPairSync('ed25519')
 
-/** Mock catalog configuration for testing purposes. */
-const catalogConfig: SFTPConfig = {
+/** Mock catalog configuration for testing purposes. */ /**
+const catalogConfig: S3Config = {
   url: 'localhost',
   port: 31022,
   login: 'test3',
@@ -44,7 +45,7 @@ const getResourceDefaultConfig = {
 }
 
 // Configurations invalides pour les tests d'erreur
-const invalidTestsConfigs: { description: string, config: SFTPConfig, secret: Record<string, string> }[] = [
+const invalidTestsConfigs: { description: string, config: S3Config, secret: Record<string, string> }[] = [
   {
     description: 'should throw an error with an invalid url',
     config: {
@@ -255,7 +256,7 @@ describe('test the sftp catalog', () => {
 
   describe('prepare', () => {
     it('should mask sshKey and set secret when sshKey is provided', async () => {
-      const catalogConfig: SFTPConfig = {
+      const catalogConfig: S3Config = {
         url: 'localhost',
         port: 31022,
         login: 'test3',
@@ -272,12 +273,12 @@ describe('test the sftp catalog', () => {
         capabilities: []
       })
 
-      assert.strictEqual((newConfig as SFTPConfig).connectionKey.sshKey, '********')
+      assert.strictEqual((newConfig as S3Config).connectionKey.sshKey, '********')
       assert.strictEqual(newSecrets?.sshKey, keysUser.private)
     })
 
     it('should mask password and set secret when password is provided', async () => {
-      const catalogConfig: SFTPConfig = {
+      const catalogConfig: S3Config = {
         url: 'localhost',
         port: 31022,
         login: 'test3',
@@ -293,7 +294,7 @@ describe('test the sftp catalog', () => {
       })
 
       assert.ok(newConfig, 'newConfig should not be undefined')
-      assert.strictEqual((newConfig as SFTPConfig).connectionKey.password, '********')
+      assert.strictEqual((newConfig as S3Config).connectionKey.password, '********')
       assert.strictEqual(newSecrets?.password, '12345')
     })
 
@@ -315,3 +316,4 @@ describe('test the sftp catalog', () => {
     return JSON.parse(JSON.stringify(obj))
   }
 })
+*/

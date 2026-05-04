@@ -9,5 +9,5 @@ export const capabilities = [
   'import',
 ] satisfies Capability[]
 
-export type SFTPCapabilities = typeof capabilities
+export type S3Capabilities = typeof capabilities
 export default capabilities

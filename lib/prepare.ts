@@ -1,49 +1,31 @@
-import type { SFTPConfig } from '#types'
+import type { S3Config } from '#types'
+import { ListBucketsCommand, S3Client } from '@aws-sdk/client-s3'
 import type { PrepareContext } from '@data-fair/types-catalogs'
-import type { SFTPCapabilities } from './capabilities.ts'
-import { type Config, NodeSSH } from 'node-ssh'
+import type { S3Capabilities } from './capabilities.ts'
 
-export default async ({ catalogConfig, secrets }: PrepareContext<SFTPConfig, SFTPCapabilities>) => {
-  switch (catalogConfig.connectionKey.key) {
-    case 'sshKey':
-      delete secrets.password
-      if (catalogConfig.connectionKey.sshKey === '') {
-        delete secrets.sshKey
-      } else if (catalogConfig.connectionKey.sshKey && catalogConfig.connectionKey.sshKey !== '********') {
-        secrets.sshKey = catalogConfig.connectionKey.sshKey
-        catalogConfig.connectionKey.sshKey = '********'
-      }
-      break
-    case 'password':
-      delete secrets.sshKey
-      if (catalogConfig.connectionKey.password === '') {
-        delete secrets.password
-      } else if (catalogConfig.connectionKey.password && catalogConfig.connectionKey.password !== '********') {
-        secrets.password = catalogConfig.connectionKey.password
-        catalogConfig.connectionKey.password = '********'
-      }
-      break
-    default: break
+export default async ({ catalogConfig, secrets }: PrepareContext<S3Config, S3Capabilities>) => {
+  if (catalogConfig.accessKeys.secretAccessKey === '') {
+    delete secrets.secretAccessKey
+  } else if (catalogConfig.accessKeys.secretAccessKey && catalogConfig.accessKeys.secretAccessKey !== '***************') {
+    secrets.secretAccessKey = catalogConfig.accessKeys.secretAccessKey
+    catalogConfig.accessKeys.secretAccessKey = '***************'
   }
 
-  // try the SFTP connection
+  // try the S3 connection
   try {
-    const paramsConnection: Config = {
-      host: catalogConfig.url,
-      username: catalogConfig.login,
-      port: catalogConfig.port
-    }
-    if (catalogConfig.connectionKey.key === 'sshKey') {
-      paramsConnection.privateKey = secrets.sshKey
-    } else if (catalogConfig.connectionKey.key === 'password') {
-      paramsConnection.password = secrets.password
-    } else {
-      throw new Error('format non pris en charge')
-    }
+    const accessKeyId = catalogConfig.accessKeys.accessKeyId // '8qbrg7nhlQX930gAH49a'
+    const secretAccessKey = secrets.secretAccessKey // '5Z9iDvVsfMooM1MUSev3MEKryKpNP7tFfksxW19Q'
 
-    const ssh = new NodeSSH()
-    await ssh.connect(paramsConnection)
-    ssh.dispose()
+    const client = new S3Client({
+      region: catalogConfig.region, // 'eu-west-3',
+      credentials: { accessKeyId, secretAccessKey },
+      endpoint: catalogConfig.endpoint, // 'http://localhost:9000/',
+      forcePathStyle: catalogConfig.forcePathStyle
+    })
+
+    // Try a connection
+    await client.send(new ListBucketsCommand({}))
+    client.destroy()
   } catch (error) {
     console.error('Connection test failed:', error)
     throw new Error('Connection test failed', { cause: error })

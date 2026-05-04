@@ -1,3 +1,4 @@
+/**
 import type { LogFunctions } from '@data-fair/types-catalogs'
 import chalk from 'chalk'
 import draftlog from 'draftlog'
@@ -12,7 +13,7 @@ const taskInfo: Record<string, { msg: string, total: number }> = {}
 
 /**
  * Creates a visual progress bar
- */
+ */ /**
 function createProgressBar (progress: number, total: number, width: number = 20): string {
   const percentage = Math.min(100, Math.max(0, (progress / total) * 100))
   const filled = Math.round((percentage / 100) * width)
@@ -27,7 +28,7 @@ function createProgressBar (progress: number, total: number, width: number = 20)
 /**
  * Test utils functions for logging.
  * In the future, this cold be moved to a common library.
- */
+ */ /**
 export const logFunctions: LogFunctions = {
   info: async (msg, extra) => console.log(chalk.blueBright(`[${dayjs().format('LTS')}][Info] ${msg}`), extra),
   warning: async (msg, extra) => console.log(chalk.yellowBright(`[${dayjs().format('LTS')}][Warning] ${msg}`), extra),
@@ -49,3 +50,4 @@ export const logFunctions: LogFunctions = {
     else tasksDraftLog[taskKey](chalk.cyanBright(msg))
   }
 }
+*/

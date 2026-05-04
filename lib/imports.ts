@@ -1,44 +1,9 @@
-import type { SFTPConfig } from '#types'
-import type { FileEntryWithStats } from 'ssh2'
+import type { S3Config } from '#types'
 import type capabilities from './capabilities.ts'
 import type { ListContext, Folder, CatalogPlugin } from '@data-fair/types-catalogs'
-import { type Config, NodeSSH } from 'node-ssh'
+import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3'
 
 type ResourceList = Awaited<ReturnType<CatalogPlugin['list']>>['results']
-
-/**
- * Prepares a list of files and folders from the SFTP directory listing.
- *
- * @param list - The array of file objects returned by the SFTP `readdir` method.
- * @param path - The current directory path.
- * @returns An array of `Folder` or `ResourceList` objects representing the files and folders.
- */
-const prepareFiles = (list: FileEntryWithStats[], path: string): (Folder[] | ResourceList) => {
-  return list.map((file: FileEntryWithStats) => {
-    const pointPos = file.filename.lastIndexOf('.')
-    if (file.longname.charAt(0) === 'd') {
-      // Folder
-      return {
-        id: path + '/' + file.filename,
-        title: file.filename,
-        type: 'folder',
-        updatedAt: file.attrs.mtime ? new Date(file.attrs.mtime * 1000) : undefined
-      } as Folder
-    } else {
-      // ResourceList
-      return {
-        id: path + '/' + file.filename,
-        title: file.filename,
-        type: 'resource',
-        description: '',
-        format: (pointPos === -1) ? '' : (file.filename.substring(pointPos + 1)),
-        mimeType: '',
-        size: file.attrs.size,
-        updatedAt: file.attrs.mtime ? new Date(file.attrs.mtime * 1000) : undefined
-      } as ResourceList[number]
-    }
-  })
-}
 
 /**
  * Lists the contents of a folder on an SFTP server.
@@ -47,49 +12,68 @@ const prepareFiles = (list: FileEntryWithStats[], path: string): (Folder[] | Res
  * @returns An object containing the count of items, the list of results (folders and resources), and the path as an array of folders.
  * @throws Will throw an error if the connection configuration is invalid or not supported.
  */
-export const list = async ({ catalogConfig, secrets, params }: ListContext<SFTPConfig, typeof capabilities>): ReturnType<CatalogPlugin['list']> => {
-  const paramsConnection: Config = {
-    host: catalogConfig.url,
-    username: catalogConfig.login,
-    port: catalogConfig.port
-  }
-  if (catalogConfig.connectionKey.key === 'sshKey') {
-    paramsConnection.privateKey = secrets.sshKey
-  } else if (catalogConfig.connectionKey.key === 'password') {
-    paramsConnection.password = secrets.password
-  } else {
-    throw new Error('format non pris en charge')
-  }
+export const list = async ({ catalogConfig, secrets, params }: ListContext<S3Config, typeof capabilities>): ReturnType<CatalogPlugin['list']> => {
+  const accessKeyId = catalogConfig.accessKeys.accessKeyId // '8qbrg7nhlQX930gAH49a'
+  const secretAccessKey = secrets.secretAccessKey // '5Z9iDvVsfMooM1MUSev3MEKryKpNP7tFfksxW19Q'
 
-  const ssh = new NodeSSH()
-
-  try {
-    await ssh.connect(paramsConnection)
-  } catch (err) {
-    console.error(err)
-    throw new Error('Configuration invalide')
-  }
-  const clientSFTP = await ssh.requestSFTP()
-
-  const path = params.currentFolderId ?? '.'
-  const files: FileEntryWithStats[] = await new Promise((resolve, reject) => {
-    if (!clientSFTP) {
-      throw new Error('Configuration invalide (clientSFTP manquant)')
-    }
-    clientSFTP.readdir(path, (err: any, list: any) => {
-      if (err) {
-        console.error('Error reading directory:', err)
-        return reject(err)
-      }
-      resolve(list)
-    })
+  const client = new S3Client({
+    region: catalogConfig.region, // 'eu-west-3',
+    credentials: { accessKeyId, secretAccessKey },
+    endpoint: catalogConfig.endpoint, // 'http://localhost:9000/',
+    forcePathStyle: catalogConfig.forcePathStyle // true
   })
 
-  const results = prepareFiles(files, path)
+  console.log('Répertoire courant :', params.currentFolderId)
+  console.log('Préfix :', params.currentFolderId ? params.currentFolderId.substring(1, params.currentFolderId.length) + '/' : '')
+
+  const data = await client.send(new ListObjectsV2Command({
+    Bucket: catalogConfig.bucket, // 'test',
+    Prefix: params.currentFolderId ? params.currentFolderId.substring(1, params.currentFolderId.length) + '/' : '',
+    Delimiter: '/'
+  }))
+
+  console.log('Fichiers : ', data.Contents)
+
+  const results: (Folder | ResourceList[number])[] = []
+
+  if (data.Contents) {
+    for (const file of data.Contents) {
+      const resourceList: ResourceList[number] = {
+        id: (params.currentFolderId ?? '') + '/' + file.Key,
+        title: file.Key ?? 'unnamed',
+        type: 'resource',
+        description: '',
+        // The return value of `pop` cannot be undefined, even if the filename doesn't have an extension (no `.`),
+        // the split will return an array of length 1, therefore with a last element
+        format: file.Key ? file.Key.split('.').pop()! : '',
+        mimeType: '',
+        size: file.Size ?? 0,
+        updatedAt: file.LastModified ? file.LastModified.toDateString() : undefined
+      }
+      results.push(resourceList)
+    }
+  }
+
+  if (data.CommonPrefixes) {
+    for (const prefix of data.CommonPrefixes) {
+      const name = prefix.Prefix ? prefix.Prefix.substring(0, prefix.Prefix.length - 1).split('/').pop()! : 'unnamed'
+      const folder: Folder = {
+        id: (params.currentFolderId ?? '') + '/' + name,
+        title: name,
+        type: 'folder',
+        updatedAt: undefined
+      }
+      results.push(folder)
+    }
+  }
 
   const pathFolder: Folder[] = []
   let parentId: string | undefined = (params.currentFolderId?.indexOf('./')) === -1 ? params.currentFolderId : params.currentFolderId?.substring(params.currentFolderId.indexOf('./') + 2)
+  console.log('parentId : ', parentId)
+  console.log('folder : ', pathFolder)
   while (parentId && parentId !== '') {
+    console.log('\thello', parentId)
+    console.log('\tfolder', pathFolder)
     pathFolder.unshift({
       id: parentId,
       title: parentId.substring(parentId.lastIndexOf('/') + 1),
@@ -98,6 +82,9 @@ export const list = async ({ catalogConfig, secrets, params }: ListContext<SFTPC
     parentId = parentId.substring(0, parentId.lastIndexOf('/'))
   }
 
+  client.destroy()
+
+  console.log('folder', pathFolder)
   return {
     count: results.length,
     results,
