@@ -1,7 +1,6 @@
-/**
 import type { S3Config } from '#types'
 import type { CatalogPlugin, GetResourceContext, Resource } from '@data-fair/types-catalogs'
-import { type Config, NodeSSH } from 'node-ssh'
+// import { type Config, NodeSSH } from 'node-ssh'
 
 /**
  * Download localy a specific resource from a SFTP server, and retrieves the metadata with the filepath of the downloaded file.
@@ -9,10 +8,10 @@ import { type Config, NodeSSH } from 'node-ssh'
  * @param catalogConfig - The SFTP configuration object.
  * @param resourceId - The identifier (path) of the resource.
  * @returns A `Resource` object representing the file.
- */ /**
+ */
 export const getResource = async (context: GetResourceContext<S3Config>): ReturnType<CatalogPlugin['getResource']> => {
   const resource = await getMetaData(context)
-  resource.filePath = await downloadResource(context)
+  // resource.filePath = await downloadResource(context)
   return resource
 }
 

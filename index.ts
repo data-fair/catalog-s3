@@ -17,12 +17,10 @@ const plugin: CatalogPlugin<S3Config, S3Capabilities> = {
     return list(context)
   },
 
-  /**
   async getResource (context) {
     const { getResource } = await import('./lib/download.ts')
     return getResource(context)
   },
- */
 
   metadata: {
     title: 'Catalog S3',
