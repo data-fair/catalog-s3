@@ -6,25 +6,24 @@ import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3'
 type ResourceList = Awaited<ReturnType<CatalogPlugin['list']>>['results']
 
 /**
- * Lists the contents of a folder on an SFTP server.
+ * Lists the contents of a folder on an S3 server.
  *
- * @param context - The context containing catalog configuration and parameters.
- * @returns An object containing the count of items, the list of results (folders and resources), and the path as an array of folders.
- * @throws Will throw an error if the connection configuration is invalid or not supported.
+ * @param context   The context containing catalog configuration and parameters
+ * @returns   An object containing the count of items, the list of results (folders and resources), and the path as an array of folders
  */
 export const list = async ({ catalogConfig, secrets, params }: ListContext<S3Config, typeof capabilities>): ReturnType<CatalogPlugin['list']> => {
-  const accessKeyId = catalogConfig.accessKeys.accessKeyId // '8qbrg7nhlQX930gAH49a'
-  const secretAccessKey = secrets.secretAccessKey // '5Z9iDvVsfMooM1MUSev3MEKryKpNP7tFfksxW19Q'
+  const accessKeyId = catalogConfig.accessKeys.accessKeyId
+  const secretAccessKey = secrets.secretAccessKey
 
   const client = new S3Client({
-    region: catalogConfig.region, // 'eu-west-3',
+    region: catalogConfig.region,
     credentials: { accessKeyId, secretAccessKey },
-    endpoint: catalogConfig.endpoint, // 'http://localhost:9000/',
-    forcePathStyle: catalogConfig.forcePathStyle // true
+    endpoint: catalogConfig.endpoint,
+    forcePathStyle: catalogConfig.forcePathStyle
   })
 
   const data = await client.send(new ListObjectsV2Command({
-    Bucket: catalogConfig.bucket, // 'test',
+    Bucket: catalogConfig.bucket,
     Prefix: params.currentFolderId ? params.currentFolderId.substring(1, params.currentFolderId.length) + '/' : '',
     Delimiter: '/'
   }))

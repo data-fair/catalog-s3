@@ -1,21 +1,29 @@
 import type { S3Config } from '#types'
 import type { CatalogPlugin, GetResourceContext, Resource } from '@data-fair/types-catalogs'
-// import { type Config, NodeSSH } from 'node-ssh'
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3'
+import { pipeline } from 'stream/promises'
+import fs from 'fs-extra'
 
 /**
- * Download localy a specific resource from a SFTP server, and retrieves the metadata with the filepath of the downloaded file.
+ * Downloads a specific resource locally from an S3 server and retrieves metadata from the downloaded file path.
  *
- * @param catalogConfig - The SFTP configuration object.
- * @param resourceId - The identifier (path) of the resource.
- * @returns A `Resource` object representing the file.
+ * @param catalogConfig   The S3 configuration object
+ * @param resourceId      The identifier (path) of the resource
+ * @returns   A `Resource` object representing the file
  */
 export const getResource = async (context: GetResourceContext<S3Config>): ReturnType<CatalogPlugin['getResource']> => {
   const resource = await getMetaData(context)
-  // resource.filePath = await downloadResource(context)
+  resource.filePath = await downloadResource(context)
   return resource
 }
 
-export const getMetaData = async ({ catalogConfig, resourceId }: GetResourceContext<S3Config>): Promise<Resource> => {
+/**
+ * Allows you to retrieve the metadata of the resource to be downloaded
+ *
+ * @param resourceId  The identifier (path) of the resource.
+ * @returns  An object containing the identifier, title (name), format and file path (empty).
+ */
+export const getMetaData = async ({ resourceId }: GetResourceContext<S3Config>): Promise<Resource> => {
   const pointPos = resourceId.lastIndexOf('.')
   return {
     id: resourceId,
@@ -26,47 +34,36 @@ export const getMetaData = async ({ catalogConfig, resourceId }: GetResourceCont
 }
 
 /**
- * Downloads a resource (file) from the SFTP server to a temporary directory.
+ * Downloads a resource (file) from the S3 server to a temporary directory.
  *
- * @param context - The context containing catalog configuration, resource ID, import configuration, and temporary directory path.
- * @returns The local path to the downloaded file, or `undefined` if the download fails.
- * @throws Will throw an error if the connection configuration is invalid or not supported.
- */ /**
+ * @param context   The context containing catalog configuration, resource ID, import configuration, and temporary directory path
+ * @returns   The local path to the downloaded file, or `undefined` if the download fails
+ */
 const downloadResource = async ({ catalogConfig, resourceId, secrets, tmpDir }:GetResourceContext<S3Config>) => {
-  const ssh = new NodeSSH()
+  const accessKeyId = catalogConfig.accessKeys.accessKeyId
+  const secretAccessKey = secrets.secretAccessKey
 
-  const paramsConnection: Config = {
-    host: catalogConfig.url,
-    username: catalogConfig.login,
-    port: catalogConfig.port
-  }
-  if (catalogConfig.connectionKey.key === 'sshKey') {
-    paramsConnection.privateKey = secrets.sshKey
-  } else if (catalogConfig.connectionKey.key === 'password') {
-    paramsConnection.password = secrets.password
-  } else {
-    throw new Error('format non pris en charge')
-  }
+  const client = new S3Client({
+    region: catalogConfig.region,
+    credentials: { accessKeyId, secretAccessKey },
+    endpoint: catalogConfig.endpoint,
+    forcePathStyle: catalogConfig.forcePathStyle
+  })
 
-  try {
-    await ssh.connect(paramsConnection)
-  } catch (err) {
-    throw new Error('Configuration invalide')
-  }
+  const data = await client.send(new GetObjectCommand({
+    Bucket: catalogConfig.bucket,
+    Key: '/' + resourceId
+  }))
 
-  // const fs = await import('node:fs/promises')
-  resourceId = resourceId.substring(resourceId.indexOf('./') + 2)
-  const destinationPath = tmpDir + '/' + resourceId.substring(resourceId.lastIndexOf('/') + 1)
+  const filename = resourceId.substring(resourceId.lastIndexOf('/') + 1)
+  const destinationPath = tmpDir + '/' + filename
 
-  // creation du dossier pour stocker le fichier distant
-  // await fs.mkdir(destinationPath.substring(0, destinationPath.lastIndexOf('/')), { recursive: true })
+  // We are not explicitly retrieving a file but a stream, which must be read in order to import the resource.
+  await pipeline(
+    data.Body as NodeJS.ReadableStream,
+    fs.createWriteStream(destinationPath)
+  )
 
-  try {
-    await ssh.getFile(destinationPath, resourceId)
-    return destinationPath
-  } catch (error) {
-    console.error('Error downloading file:', error)
-    throw error
-  }
+  client.destroy()
+  return destinationPath
 }
-  */

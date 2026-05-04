@@ -33,7 +33,7 @@
     "@data-fair/lib-node": "^2.8.1",
     "@data-fair/lib-utils": "^1.6.0",
     "debug": "^4.4.1",
-    "fs-extra": "^11.3.0",
+    "fs-extra": "^11.3.4",
     "node-ssh": "^13.2.1",
     "prom-client": "^15.1.3"
   },
