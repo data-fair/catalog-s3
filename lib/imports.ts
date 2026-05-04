@@ -35,6 +35,7 @@ export const list = async ({ catalogConfig, secrets, params }: ListContext<S3Con
     for (const file of data.Contents) {
       const name = file.Key ? file.Key.substring(0, file.Key.length).split('/').pop()! : 'unnamed'
       const resourceList: ResourceList[number] = {
+        // This corresponds to file.key; however, if the file is not named, the path from which it was extracted must be retained.
         id: (params.currentFolderId ?? '') + '/' + name,
         title: name,
         type: 'resource',
@@ -55,6 +56,7 @@ export const list = async ({ catalogConfig, secrets, params }: ListContext<S3Con
     for (const prefix of data.CommonPrefixes) {
       const name = prefix.Prefix ? prefix.Prefix.substring(0, prefix.Prefix.length - 1).split('/').pop()! : 'unnamed'
       const folder: Folder = {
+        // This corresponds to prefix.Prefix; however, if the prefix (directory) is not named, the path from which it was extracted must be retained.
         id: (params.currentFolderId ?? '') + '/' + name,
         title: name,
         type: 'folder',

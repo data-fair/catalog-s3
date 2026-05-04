@@ -208,7 +208,6 @@
         },
         {
           "const": "eu-west-3",
-          "description": "The user login",
           "title": "Europe (Paris)",
           "x-i18n-title": {
             "fr": "Europe (Paris)"

@@ -52,7 +52,7 @@ const downloadResource = async ({ catalogConfig, resourceId, secrets, tmpDir }:G
 
   const data = await client.send(new GetObjectCommand({
     Bucket: catalogConfig.bucket,
-    Key: '/' + resourceId
+    Key: resourceId
   }))
 
   const filename = resourceId.substring(resourceId.lastIndexOf('/') + 1)

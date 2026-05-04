@@ -46,6 +46,7 @@
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^24.0.3",
     "@types/ssh2": "^1.15.5",
+    "aws-sdk-client-mock": "^4.1.0",
     "chalk": "^5.6.2",
     "dayjs": "^1.11.19",
     "draftlog": "^1.0.13",
