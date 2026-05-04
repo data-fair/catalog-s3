@@ -23,24 +23,21 @@ export const list = async ({ catalogConfig, secrets, params }: ListContext<S3Con
     forcePathStyle: catalogConfig.forcePathStyle // true
   })
 
-  console.log('Répertoire courant :', params.currentFolderId)
-  console.log('Préfix :', params.currentFolderId ? params.currentFolderId.substring(1, params.currentFolderId.length) + '/' : '')
-
   const data = await client.send(new ListObjectsV2Command({
     Bucket: catalogConfig.bucket, // 'test',
     Prefix: params.currentFolderId ? params.currentFolderId.substring(1, params.currentFolderId.length) + '/' : '',
     Delimiter: '/'
   }))
 
-  console.log('Fichiers : ', data.Contents)
-
   const results: (Folder | ResourceList[number])[] = []
 
+  // Get the files
   if (data.Contents) {
     for (const file of data.Contents) {
+      const name = file.Key ? file.Key.substring(0, file.Key.length).split('/').pop()! : 'unnamed'
       const resourceList: ResourceList[number] = {
-        id: (params.currentFolderId ?? '') + '/' + file.Key,
-        title: file.Key ?? 'unnamed',
+        id: (params.currentFolderId ?? '') + '/' + name,
+        title: name,
         type: 'resource',
         description: '',
         // The return value of `pop` cannot be undefined, even if the filename doesn't have an extension (no `.`),
@@ -48,12 +45,13 @@ export const list = async ({ catalogConfig, secrets, params }: ListContext<S3Con
         format: file.Key ? file.Key.split('.').pop()! : '',
         mimeType: '',
         size: file.Size ?? 0,
-        updatedAt: file.LastModified ? file.LastModified.toDateString() : undefined
+        updatedAt: file.LastModified ? file.LastModified.toISOString() : undefined
       }
       results.push(resourceList)
     }
   }
 
+  // Get the directories
   if (data.CommonPrefixes) {
     for (const prefix of data.CommonPrefixes) {
       const name = prefix.Prefix ? prefix.Prefix.substring(0, prefix.Prefix.length - 1).split('/').pop()! : 'unnamed'
@@ -67,13 +65,20 @@ export const list = async ({ catalogConfig, secrets, params }: ListContext<S3Con
     }
   }
 
+  // Alphanumeric sorting
+  results.sort((a, b) => {
+    if (a.title < b.title) {
+      return -1
+    } else if (b.title < a.title) {
+      return 1
+    }
+    return 0
+  })
+
+  // Get the path location
   const pathFolder: Folder[] = []
   let parentId: string | undefined = (params.currentFolderId?.indexOf('./')) === -1 ? params.currentFolderId : params.currentFolderId?.substring(params.currentFolderId.indexOf('./') + 2)
-  console.log('parentId : ', parentId)
-  console.log('folder : ', pathFolder)
   while (parentId && parentId !== '') {
-    console.log('\thello', parentId)
-    console.log('\tfolder', pathFolder)
     pathFolder.unshift({
       id: parentId,
       title: parentId.substring(parentId.lastIndexOf('/') + 1),
@@ -84,7 +89,6 @@ export const list = async ({ catalogConfig, secrets, params }: ListContext<S3Con
 
   client.destroy()
 
-  console.log('folder', pathFolder)
   return {
     count: results.length,
     results,
