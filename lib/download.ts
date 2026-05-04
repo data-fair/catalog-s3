@@ -1,4 +1,4 @@
-import type { SFTPConfig } from '#types'
+import type { S3Config } from '#types'
 import type { CatalogPlugin, GetResourceContext, Resource } from '@data-fair/types-catalogs'
 import { type Config, NodeSSH } from 'node-ssh'
 
@@ -9,13 +9,13 @@ import { type Config, NodeSSH } from 'node-ssh'
  * @param resourceId - The identifier (path) of the resource.
  * @returns A `Resource` object representing the file.
  */
-export const getResource = async (context: GetResourceContext<SFTPConfig>): ReturnType<CatalogPlugin['getResource']> => {
+export const getResource = async (context: GetResourceContext<S3Config>): ReturnType<CatalogPlugin['getResource']> => {
   const resource = await getMetaData(context)
   resource.filePath = await downloadResource(context)
   return resource
 }
 
-export const getMetaData = async ({ catalogConfig, resourceId }: GetResourceContext<SFTPConfig>): Promise<Resource> => {
+export const getMetaData = async ({ catalogConfig, resourceId }: GetResourceContext<S3Config>): Promise<Resource> => {
   const pointPos = resourceId.lastIndexOf('.')
   return {
     id: resourceId,
@@ -32,7 +32,7 @@ export const getMetaData = async ({ catalogConfig, resourceId }: GetResourceCont
  * @returns The local path to the downloaded file, or `undefined` if the download fails.
  * @throws Will throw an error if the connection configuration is invalid or not supported.
  */
-const downloadResource = async ({ catalogConfig, resourceId, secrets, tmpDir }:GetResourceContext<SFTPConfig>) => {
+const downloadResource = async ({ catalogConfig, resourceId, secrets, tmpDir }:GetResourceContext<S3Config>) => {
   const ssh = new NodeSSH()
 
   const paramsConnection: Config = {
