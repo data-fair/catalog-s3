@@ -1,7 +1,8 @@
 import type { S3Config } from '#types'
-import { ListBucketsCommand, S3Client } from '@aws-sdk/client-s3'
+import s3 from '@aws-sdk/client-s3'
 import type { PrepareContext } from '@data-fair/types-catalogs'
 import type { S3Capabilities } from './capabilities.ts'
+import { sendS3Command } from './client.ts'
 
 /**
  * This allows you to verify that you can create the catalog by testing a connection to an S3 server.
@@ -19,23 +20,15 @@ export default async ({ catalogConfig, secrets }: PrepareContext<S3Config, S3Cap
 
   // try the S3 connection
   try {
-    const accessKeyId = catalogConfig.accessKeys.accessKeyId
-    const secretAccessKey = secrets.secretAccessKey
-
-    const client = new S3Client({
-      region: catalogConfig.region,
-      credentials: { accessKeyId, secretAccessKey },
-      endpoint: catalogConfig.endpoint,
-      forcePathStyle: catalogConfig.forcePathStyle
-    })
-
     // We use a minimal command to test if everything is correct
-    await client.send(new ListBucketsCommand({}))
-
-    client.destroy()
+    await sendS3Command<s3.ListBucketsCommandOutput>(
+      catalogConfig, secrets,
+      new s3.ListBucketsCommand({})
+    )
   } catch (error) {
     console.error('Connection test failed:', error)
-    throw new Error('Connection test failed', { cause: error })
+    const err = error as Error
+    throw new Error('Connection test failed: ' + err.message)
   }
 
   return {

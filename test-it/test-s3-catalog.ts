@@ -135,7 +135,7 @@ describe('test the S3 catalog', () => {
       s3Mock
         .on(GetObjectCommand, {
           Bucket: 'test-bucket',
-          Key: '/data/test.xlsx'
+          Key: 'data/test.xlsx'
         })
         .resolves({
           Body: Readable.from('Hello, I\'m a test') as any
@@ -157,7 +157,7 @@ describe('test the S3 catalog', () => {
       s3Mock
         .on(GetObjectCommand, {
           Bucket: 'test-bucket',
-          Key: '/data/test.xlsx'
+          Key: 'data/test.xlsx'
         })
         .rejects(new Error('This file doesn\'t exist'))
 
@@ -174,9 +174,8 @@ describe('test the S3 catalog', () => {
       s3Mock.on(GetObjectCommand).rejects(new Error('Connection refused'))
       await assert.rejects(
         async () => {
-          const importConfig: Record<string, any> = {}
-          const update = { metadata: false, schema: false }
-          await getResource({ catalogConfig, secrets, importConfig, resourceId: '/data/test.xlsx', tmpDir: testDirectory, log: logFunctions, update })
+          const params = { currentFolderId: '' }
+          await list({ catalogConfig, secrets, params })
         }
       )
     })

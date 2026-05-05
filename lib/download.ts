@@ -1,8 +1,9 @@
 import type { S3Config } from '#types'
 import type { CatalogPlugin, GetResourceContext, Resource } from '@data-fair/types-catalogs'
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3'
+import s3 from '@aws-sdk/client-s3'
 import { pipeline } from 'stream/promises'
 import fs from 'fs-extra'
+import { sendS3Command } from './client.ts'
 
 /**
  * Downloads a specific resource locally from an S3 server and retrieves metadata from the downloaded file path.
@@ -24,11 +25,12 @@ export const getResource = async (context: GetResourceContext<S3Config>): Return
  * @returns  An object containing the identifier, title (name), format and file path (empty).
  */
 export const getMetaData = async ({ resourceId }: GetResourceContext<S3Config>): Promise<Resource> => {
-  const pointPos = resourceId.lastIndexOf('.')
+  const name = resourceId.substring(resourceId.lastIndexOf('/') + 1)
+  const pointPos = name.lastIndexOf('.')
   return {
     id: resourceId,
-    title: resourceId.substring(resourceId.lastIndexOf('/') + 1),
-    format: (pointPos === -1) ? '' : (resourceId.substring(pointPos + 1)),
+    title: name,
+    format: (pointPos === -1) ? '' : (name.substring(pointPos + 1)),
     filePath: ''
   }
 }
@@ -39,31 +41,32 @@ export const getMetaData = async ({ resourceId }: GetResourceContext<S3Config>):
  * @param context   The context containing catalog configuration, resource ID, import configuration, and temporary directory path
  * @returns   The local path to the downloaded file, or `undefined` if the download fails
  */
-const downloadResource = async ({ catalogConfig, resourceId, secrets, tmpDir }:GetResourceContext<S3Config>) => {
-  const accessKeyId = catalogConfig.accessKeys.accessKeyId
-  const secretAccessKey = secrets.secretAccessKey
+const downloadResource = async ({ catalogConfig, resourceId, secrets, tmpDir, log }:GetResourceContext<S3Config>) => {
+  try {
+    const filename = resourceId.substring(resourceId.lastIndexOf('/') + 1)
+    const destinationPath = tmpDir + '/' + filename
 
-  const client = new S3Client({
-    region: catalogConfig.region,
-    credentials: { accessKeyId, secretAccessKey },
-    endpoint: catalogConfig.endpoint,
-    forcePathStyle: catalogConfig.forcePathStyle
-  })
+    const pipelineFunction = async (data: s3.GetObjectCommandOutput) => {
+      // We are not explicitly retrieving a file but a stream, which must be read in order to import the resource.
+      await pipeline(
+        data.Body as NodeJS.ReadableStream,
+        fs.createWriteStream(destinationPath)
+      )
+    }
 
-  const data = await client.send(new GetObjectCommand({
-    Bucket: catalogConfig.bucket,
-    Key: resourceId
-  }))
+    await sendS3Command<s3.GetObjectCommandOutput>(
+      catalogConfig, secrets,
+      new s3.GetObjectCommand({
+        Bucket: catalogConfig.bucket,
+        Key: resourceId.substring(1) // Take away the first slash, the keys doesn't have them
+      }),
+      log, pipelineFunction
+    )
 
-  const filename = resourceId.substring(resourceId.lastIndexOf('/') + 1)
-  const destinationPath = tmpDir + '/' + filename
-
-  // We are not explicitly retrieving a file but a stream, which must be read in order to import the resource.
-  await pipeline(
-    data.Body as NodeJS.ReadableStream,
-    fs.createWriteStream(destinationPath)
-  )
-
-  client.destroy()
-  return destinationPath
+    return destinationPath
+  } catch (error: any) {
+    console.log('S3 request failed: ' + error)
+    if (log) await log.error('S3 request failed: ' + error.message)
+    throw new Error('S3 request failed: ' + error.message)
+  }
 }
