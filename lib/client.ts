@@ -13,12 +13,19 @@ export const getS3Client = (
   catalogConfig: S3Config,
   secrets: Record<string, string>
 ): S3Client => {
+  console.log('Region : ', catalogConfig.region)
+  console.log('Access Key Id : ', catalogConfig.accessKeys.accessKeyId)
+  console.log('Secret Access Key Id : ', secrets.secretAccessKey)
+  console.log('Endpoint : ', catalogConfig.endpoint)
+  console.log('Force : ', catalogConfig.forcePathStyle)
+
+  const accessKeyId = catalogConfig.accessKeys.accessKeyId
+  const secretAccessKey = secrets.secretAccessKey
   return new S3Client({
     region: catalogConfig.region,
-    credentials: {
-      accessKeyId: catalogConfig.accessKeys.accessKeyId,
-      secretAccessKey: secrets.secretAccessKey
-    },
+    // Passing credentials as a provider function bypasses the SDK's
+    // static format validation on accessKeyId (e.g. for Backblaze B2 keys)
+    credentials: () => Promise.resolve({ accessKeyId, secretAccessKey }),
     endpoint: catalogConfig.endpoint,
     forcePathStyle: catalogConfig.forcePathStyle
   })

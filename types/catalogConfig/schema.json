@@ -9,9 +9,18 @@
     "endpoint": {
       "type": "string",
       "title": "Endpoint",
-      "description": "The address of the S3 server that contains the buckets",
+      "pattern": "^https?://[^/]+(:[0-9]+)?$",
+      "description": "S3 server address: domain and optional port only, without trailing slash (e.g. https://s3.amazonaws.com or http://localhost:9000).",
       "x-i18n-description": {
-        "fr": "L'adresse du serveur contenant les buckets"
+        "fr": "Adresse du serveur S3 : uniquement le domaine et le port éventuel, sans slash final (ex: https://s3.amazonaws.com ou http://localhost:9000)."
+      },
+      "errorMessage": {
+        "pattern": "Invalid address: must start with http:// or https://, contain only the domain and optional port, without trailing slash (e.g. https://s3.amazonaws.com or http://localhost:9000)."
+      },
+      "x-i18n-errorMessage": {
+        "fr": {
+          "pattern": "Adresse invalide : doit commencer par http:// ou https://, contenir uniquement le domaine et le port éventuel, sans slash final (ex: https://s3.amazonaws.com ou http://localhost:9000)."
+        }
       }
     },
     "region": {
@@ -20,9 +29,9 @@
       "x-i18n-title": {
         "fr": "Région"
       },
-      "description": "Select a region from the list or type a custom region code directly (e.g. eu-central-3).",
+      "description": "Select a region from the list or type a custom region code directly (e.g. eu-central-1).",
       "x-i18n-description": {
-        "fr": "Sélectionnez une région dans la liste ou saisissez un code de région personnalisé directement (ex: eu-central-3)."
+        "fr": "Sélectionnez une région dans la liste ou saisissez un code de région personnalisé directement (ex: eu-central-1)."
       },
       "examples": [
         "US East (North Virginia) - us-east-1",
@@ -61,7 +70,47 @@
         "South America (São Paulo) - sa-east-1",
         "AWS GovCloud (US-East) - us-gov-east-1",
         "AWS GovCloud (US-West) - us-gov-west-1"
-      ]
+      ],
+      "x-i18n-examples": {
+        "fr": [
+          "États-Unis Est (Virginie du Nord) - us-east-1",
+          "États-Unis Est (Ohio) - us-east-2",
+          "États-Unis Ouest (Californie du Nord) - us-west-1",
+          "États-Unis Ouest (Oregon) - us-west-2",
+          "Afrique (Le Cap) - af-south-1",
+          "Asie-Pacifique (Hong Kong) - ap-east-1",
+          "Asie-Pacifique (Hyderabad) - ap-south-2",
+          "Asie-Pacifique (Jakarta) - ap-southeast-3",
+          "Asie-Pacifique (Malaisie) - ap-southeast-5",
+          "Asie-Pacifique (Melbourne) - ap-southeast-4",
+          "Asie-Pacifique (Mumbai) - ap-south-1",
+          "Asie-Pacifique (Nouvelle-Zélande) - ap-southeast-6",
+          "Asie-Pacifique (Osaka) - ap-northeast-3",
+          "Asie-Pacifique (Séoul) - ap-northeast-2",
+          "Asie-Pacifique (Singapour) - ap-southeast-1",
+          "Asie-Pacifique (Sydney) - ap-southeast-2",
+          "Asie-Pacifique (Taipei) - ap-east-2",
+          "Asie-Pacifique (Thaïlande) - ap-southeast-7",
+          "Asie-Pacifique (Tokyo) - ap-northeast-1",
+          "Canada (Centre) - ca-central-1",
+          "Canada Ouest (Calgary) - ca-west-1",
+          "Europe (Francfort) - eu-central-1",
+          "Europe (Irlande) - eu-west-1",
+          "Europe (Londres) - eu-west-2",
+          "Europe (Milan) - eu-south-1",
+          "Europe (Paris) - eu-west-3",
+          "Europe (Espagne) - eu-south-2",
+          "Europe (Stockholm) - eu-north-1",
+          "Europe (Zurich) - eu-central-2",
+          "Israël (Tel Aviv) - il-central-1",
+          "Mexique (Centre) - mx-central-1",
+          "Moyen-Orient (Bahreïn) - me-south-1",
+          "Moyen-Orient (Émirats arabes unis) - me-central-1",
+          "Amérique du Sud (São Paulo) - sa-east-1",
+          "AWS GovCloud (États-Unis Est) - us-gov-east-1",
+          "AWS GovCloud (États-Unis Ouest) - us-gov-west-1"
+        ]
+      }
     },
     "bucket": {
       "type": "string",
