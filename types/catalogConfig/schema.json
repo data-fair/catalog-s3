@@ -20,269 +20,47 @@
       "x-i18n-title": {
         "fr": "Région"
       },
-      "description": "Depending on the region, the processing of S3 requests may differ.",
+      "description": "Select a region from the list or type a custom region code directly (e.g. eu-central-3).",
       "x-i18n-description": {
-        "fr": "Selon la région, le traitement des requêtes S3 peut être différent."
+        "fr": "Sélectionnez une région dans la liste ou saisissez un code de région personnalisé directement (ex: eu-central-3)."
       },
-      "oneOfLayout": {
-        "label": "Select your S3 server region",
-        "x-i18n-label": {
-          "fr": "Sélectionnez la région de votre serveur S3"
-        }
-      },
-      "oneOf": [
-        {
-          "const": "us-east-1",
-          "title": "US East (North Virginia)",
-          "x-i18n-title": {
-            "fr": "États-Unis Est (Virginie du Nord)"
-          }
-        },
-        {
-          "const": "us-east-2",
-          "title": "US East (Ohio)",
-          "x-i18n-title": {
-            "fr": "États-Unis Est (Ohio)"
-          }
-        },
-        {
-          "const": "us-west-1",
-          "title": "US West (North California)",
-          "x-i18n-title": {
-            "fr": "États-Unis Ouest (Californie du Nord)"
-          }
-        },
-        {
-          "const": "us-west-2",
-          "title": "US West (Oregon)",
-          "x-i18n-title": {
-            "fr": "États-Unis Ouest (Oregon)"
-          }
-        },
-        {
-          "const": "af-south-1",
-          "title": "Africa (Cape Town)",
-          "x-i18n-title": {
-            "fr": "Afrique (Le Cap)"
-          }
-        },
-        {
-          "const": "ap-east-1",
-          "title": "Asia Pacific (Hong Kong)",
-          "x-i18n-title": {
-            "fr": "Asie-Pacifique (Hong Kong)"
-          }
-        },
-        {
-          "const": "ap-south-2",
-          "title": "Asia Pacific (Hyderabad)",
-          "x-i18n-title": {
-            "fr": "Asie-Pacifique (Hyderabad)"
-          }
-        },
-        {
-          "const": "ap-southeast-3",
-          "title": "Asia Pacific (Jakarta)",
-          "x-i18n-title": {
-            "fr": "Asie-Pacifique (Jakarta)"
-          }
-        },
-        {
-          "const": "ap-southeast-5",
-          "title": "Asia Pacific (Malaysia)",
-          "x-i18n-title": {
-            "fr": "Asie-Pacifique (Malaisie)"
-          }
-        },
-        {
-          "const": "ap-southeast-4",
-          "title": "Asia Pacific (Melbourne)",
-          "x-i18n-title": {
-            "fr": "Asie-Pacifique (Melbourne)"
-          }
-        },
-        {
-          "const": "ap-south-1",
-          "title": "Asia Pacific (Mumbai)",
-          "x-i18n-title": {
-            "fr": "Asie-Pacifique (Mumbai)"
-          }
-        },
-        {
-          "const": "ap-southeast-6",
-          "title": "Asia Pacific (New Zealand)",
-          "x-i18n-title": {
-            "fr": "Asie-Pacifique (Nouvelle-Zélande)"
-          }
-        },
-        {
-          "const": "ap-northeast-3",
-          "title": "Asia Pacific (Osaka)",
-          "x-i18n-title": {
-            "fr": "Asie-Pacifique (Osaka)"
-          }
-        },
-        {
-          "const": "ap-northeast-2",
-          "title": "Asia Pacific (Seoul)",
-          "x-i18n-title": {
-            "fr": "Asie-Pacifique (Séoul)"
-          }
-        },
-        {
-          "const": "ap-southeast-1",
-          "title": "Asia Pacific (Singapore)",
-          "x-i18n-title": {
-            "fr": "Asie-Pacifique (Singapour)"
-          }
-        },
-        {
-          "const": "ap-southeast-2",
-          "title": "Asia Pacific (Sydney)",
-          "x-i18n-title": {
-            "fr": "Asie-Pacifique (Sydney)"
-          }
-        },
-        {
-          "const": "ap-east-2",
-          "title": "Asia Pacific (Taipei)",
-          "x-i18n-title": {
-            "fr": "Asie-Pacifique (Taipei)"
-          }
-        },
-        {
-          "const": "ap-southeast-7",
-          "title": "Asia Pacific (Thailand)",
-          "x-i18n-title": {
-            "fr": "Asie-Pacifique (Thaïlande)"
-          }
-        },
-        {
-          "const": "ap-northeast-1",
-          "title": "Asia Pacific (Tokyo)",
-          "x-i18n-title": {
-            "fr": "Asie-Pacifique (Tokyo)"
-          }
-        },
-        {
-          "const": "ca-central-1",
-          "title": "Canada (Central)",
-          "x-i18n-title": {
-            "fr": "Canada (Centre)"
-          }
-        },
-        {
-          "const": "ca-west-1",
-          "title": "Canada West (Calgary)",
-          "x-i18n-title": {
-            "fr": "Canada Ouest (Calgary)"
-          }
-        },
-        {
-          "const": "eu-central-1",
-          "title": "Europe (Frankfurt)",
-          "x-i18n-title": {
-            "fr": "Europe (Francfort)"
-          }
-        },
-        {
-          "const": "eu-west-1",
-          "title": "Europe (Ireland)",
-          "x-i18n-title": {
-            "fr": "Europe (Irlande)"
-          }
-        },
-        {
-          "const": "eu-west-2",
-          "title": "Europe (London)",
-          "x-i18n-title": {
-            "fr": "Europe (Londres)"
-          }
-        },
-        {
-          "const": "eu-south-1",
-          "title": "Europe (Milan)",
-          "x-i18n-title": {
-            "fr": "Europe (Milan)"
-          }
-        },
-        {
-          "const": "eu-west-3",
-          "title": "Europe (Paris)",
-          "x-i18n-title": {
-            "fr": "Europe (Paris)"
-          }
-        },
-        {
-          "const": "eu-south-2",
-          "title": "Europe (Spain)",
-          "x-i18n-title": {
-            "fr": "Europe (Espagne)"
-          }
-        },
-        {
-          "const": "eu-north-1",
-          "title": "Europe (Stockholm)",
-          "x-i18n-title": {
-            "fr": "Europe (Stockholm)"
-          }
-        },
-        {
-          "const": "eu-central-2",
-          "title": "Europe (Zurich)",
-          "x-i18n-title": {
-            "fr": "Europe (Zurich)"
-          }
-        },
-        {
-          "const": "il-central-1",
-          "title": "Israel (Tel Aviv)",
-          "x-i18n-title": {
-            "fr": "Israël (Tel Aviv)"
-          }
-        },
-        {
-          "const": "mx-central-1",
-          "title": "Mexico (Central)",
-          "x-i18n-title": {
-            "fr": "Mexique (Centre)"
-          }
-        },
-        {
-          "const": "me-south-1",
-          "title": "Middle East (Bahrain)",
-          "x-i18n-title": {
-            "fr": "Moyen-Orient (Bahreïn)"
-          }
-        },
-        {
-          "const": "me-central-1",
-          "title": "Middle East (UAE)",
-          "x-i18n-title": {
-            "fr": "Moyen-Orient (Émirats arabes unis)"
-          }
-        },
-        {
-          "const": "sa-east-1",
-          "title": "South America (São Paulo)",
-          "x-i18n-title": {
-            "fr": "Amérique du Sud (São Paulo)"
-          }
-        },
-        {
-          "const": "us-gov-east-1",
-          "title": "AWS GovCloud (US-East)",
-          "x-i18n-title": {
-            "fr": "AWS GovCloud (États-Unis Est)"
-          }
-        },
-        {
-          "const": "us-gov-west-1",
-          "title": "AWS GovCloud (US-West)",
-          "x-i18n-title": {
-            "fr": "AWS GovCloud (États-Unis Ouest)"
-          }
-        }
+      "examples": [
+        "US East (North Virginia) - us-east-1",
+        "US East (Ohio) - us-east-2",
+        "US West (North California) - us-west-1",
+        "US West (Oregon) - us-west-2",
+        "Africa (Cape Town) - af-south-1",
+        "Asia Pacific (Hong Kong) - ap-east-1",
+        "Asia Pacific (Hyderabad) - ap-south-2",
+        "Asia Pacific (Jakarta) - ap-southeast-3",
+        "Asia Pacific (Malaysia) - ap-southeast-5",
+        "Asia Pacific (Melbourne) - ap-southeast-4",
+        "Asia Pacific (Mumbai) - ap-south-1",
+        "Asia Pacific (New Zealand) - ap-southeast-6",
+        "Asia Pacific (Osaka) - ap-northeast-3",
+        "Asia Pacific (Seoul) - ap-northeast-2",
+        "Asia Pacific (Singapore) - ap-southeast-1",
+        "Asia Pacific (Sydney) - ap-southeast-2",
+        "Asia Pacific (Taipei) - ap-east-2",
+        "Asia Pacific (Thailand) - ap-southeast-7",
+        "Asia Pacific (Tokyo) - ap-northeast-1",
+        "Canada (Central) - ca-central-1",
+        "Canada West (Calgary) - ca-west-1",
+        "Europe (Frankfurt) - eu-central-1",
+        "Europe (Ireland) - eu-west-1",
+        "Europe (London) - eu-west-2",
+        "Europe (Milan) - eu-south-1",
+        "Europe (Paris) - eu-west-3",
+        "Europe (Spain) - eu-south-2",
+        "Europe (Stockholm) - eu-north-1",
+        "Europe (Zurich) - eu-central-2",
+        "Israel (Tel Aviv) - il-central-1",
+        "Mexico (Central) - mx-central-1",
+        "Middle East (Bahrain) - me-south-1",
+        "Middle East (UAE) - me-central-1",
+        "South America (São Paulo) - sa-east-1",
+        "AWS GovCloud (US-East) - us-gov-east-1",
+        "AWS GovCloud (US-West) - us-gov-west-1"
       ]
     },
     "bucket": {
@@ -292,14 +70,14 @@
         "fr": "Nom du bucket"
       }
     },
-    "forcePathStyle" : {
+    "forcePathStyle": {
       "type": "boolean",
       "title": "Path style forcing",
       "x-i18n-title": {
         "fr": "Forçage du type chemin"
       },
       "default": false,
-      "description" : "When the bucket name is part of the path, you must force the style (e.g., Minio).",
+      "description": "When the bucket name is part of the path, you must force the style (e.g., Minio).",
       "x-i18n-description": {
         "fr": "Lorsque le nom du bucket fait partie du chemin, vous devez forcer le type (ex: Minio)."
       }
@@ -314,12 +92,9 @@
       "x-i18n-description": {
         "fr": "Les clés de connexion à fournir pour accéder au serveur S3"
       },
-      "required": [
-        "accessKeyId",
-        "secretAccessKey"
-      ],
+      "required": ["accessKeyId", "secretAccessKey"],
       "properties": {
-        "accessKeyId" : {
+        "accessKeyId": {
           "title": "Server access key",
           "x-i18n-title": {
             "fr": "Clé d'accès au serveur"

@@ -1,5 +1,3 @@
-import type { EuropeParis } from '#type/catalogConfig/index.ts'
-
 import { strict as assert } from 'node:assert'
 import { describe, it, beforeEach, before, after } from 'node:test'
 
@@ -20,7 +18,7 @@ const testDirectory = './test-it/data-test/'
 
 // No real data, the data isn't real, it's mocked.
 const catalogConfig = {
-  region: 'eu-west-3' as EuropeParis,
+  region: 'eu-west-3',
   bucket: 'test-bucket',
   accessKeys: {
     accessKeyId: 'test-key',
