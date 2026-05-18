@@ -65,7 +65,7 @@ const downloadResource = async ({ catalogConfig, resourceId, secrets, tmpDir, lo
 
     return destinationPath
   } catch (error: any) {
-    console.log('S3 request failed: ' + error)
+    console.error('S3 request failed: ' + error)
     if (log) await log.error('S3 request failed: ' + error.message)
     throw new Error('S3 request failed: ' + error.message)
   }
