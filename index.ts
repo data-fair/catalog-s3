@@ -1,6 +1,6 @@
-import type { CatalogPlugin } from '@data-fair/types-catalogs'
+import type CatalogPlugin from '@data-fair/types-catalogs'
 import { type S3Config, configSchema, assertConfigValid } from '#types'
-import capabilities, { type S3Capabilities } from './lib/capabilities.ts'
+import { type S3Capabilities, capabilities } from './lib/capabilities.ts'
 
 // Since the plugin is very frequently imported, each function is imported on demand,
 // instead of loading the entire plugin.
@@ -23,8 +23,7 @@ const plugin: CatalogPlugin<S3Config, S3Capabilities> = {
   },
 
   metadata: {
-    title: 'Catalog S3',
-    description: 'S3 plugin for Data Fair Catalog',
+    title: 'S3',
     capabilities
   },
   configSchema,
