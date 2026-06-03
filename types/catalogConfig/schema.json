@@ -148,12 +148,20 @@
           "x-i18n-title": {
             "fr": "Clé d'accès au serveur"
           },
+          "description": "Use a dedicated access key rather than the master key. This allows for finer-grained permission control and limits security risks.",
+          "x-i18n-description": {
+            "fr": "Utilisez une nouvelle clé d'accès spécifique plutôt que la clé principale (master). Cela permet un contrôle plus fin des autorisations et limite les risques liés à la sécurité."
+          },
           "type": "string"
         },
         "secretAccessKey": {
-          "title": "Secret key for the connection",
+          "title": "Secret access key for the connection",
           "x-i18n-title": {
             "fr": "Clé secrète pour la connexion"
+          },
+          "description": "Also referred to as the application key depending on your provider.",
+          "x-i18n-description": {
+            "fr": "Aussi appelée clé d'application selon votre fournisseur."
           },
           "type": "string"
         }
