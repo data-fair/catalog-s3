@@ -159,9 +159,9 @@
           "x-i18n-title": {
             "fr": "Clé secrète pour la connexion"
           },
-          "description": "Also referred to as the application key depending on your provider.",
+          "description": "This key may also be referred to as the application key depending on your provider.",
           "x-i18n-description": {
-            "fr": "Aussi appelée clé d'application selon votre fournisseur."
+            "fr": "Cette clé est aussi appelée clé d'application selon votre fournisseur."
           },
           "type": "string"
         }
