@@ -1,5 +1,6 @@
 import type { S3Config } from '#types'
 import { S3Client } from '@aws-sdk/client-s3'
+import { SsrfHttpAgent, SsrfHttpsAgent, getSsrfRules } from '@data-fair/lib-node/ssrf.js'
 import type { LogFunctions } from '@data-fair/types-catalogs'
 
 /**
@@ -21,7 +22,13 @@ export const getS3Client = (
     // static format validation on accessKeyId (e.g. for Backblaze B2 keys)
     credentials: () => Promise.resolve({ accessKeyId, secretAccessKey }),
     endpoint: catalogConfig.endpoint,
-    forcePathStyle: catalogConfig.forcePathStyle
+    forcePathStyle: catalogConfig.forcePathStyle,
+    // the endpoint is chosen by the user: refuse to connect to non public addresses (SSRF)
+    // dedicated agents rather than the shared ones of lib-node, as client.destroy() destroys them
+    requestHandler: {
+      httpAgent: new SsrfHttpAgent({ keepAlive: true }, getSsrfRules()),
+      httpsAgent: new SsrfHttpsAgent({ keepAlive: true }, getSsrfRules())
+    }
   })
 }
 
